@@ -25,7 +25,22 @@ __pycache__/
 venv/
 *.egg-info/
 
-# --- LaTeX build artifacts ---
+# --- the manuscript must never land in this repository ---
+# This is a public code release. The paper source, its bibliography, its
+# figures-as-typeset and any compiled PDF stay out. If a future release needs
+# to ship a figure, add that one file with `git add -f`.
+*.tex
+*.bib
+*.pdf
+*.sty
+*.cls
+*.bst
+paper/
+paper-*/
+manuscript/
+release-notes/
+
+# --- LaTeX build artifacts (belt and braces; the sources are excluded above) ---
 *.aux
 *.bbl
 *.blg

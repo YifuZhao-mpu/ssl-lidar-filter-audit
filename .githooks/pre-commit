@@ -1,0 +1,49 @@
+#!/bin/bash
+# Refuse commits that would publish the manuscript, bulk data, or credentials.
+#
+# .gitignore alone is not enough: `git add -f` bypasses it, and a path that is
+# already tracked keeps being tracked. This hook checks what is actually staged.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass deliberately:     git commit --no-verify
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+fail=0
+note() { echo "  BLOCKED: $1"; fail=1; }
+
+while IFS= read -r f; do
+  case "$f" in
+    *.tex|*.bib|*.cls|*.sty|*.bst|*.pdf)
+      note "$f  (manuscript source or PDF -- this is a code-only release)" ;;
+    paper/*|paper-*/*|manuscript/*)
+      note "$f  (manuscript directory)" ;;
+    *.pkl|*.pth|*.bin|*.npy|*.npz)
+      note "$f  (model weights or serialized data)" ;;
+  esac
+
+  # Large blobs: GitHub warns above 50 MB and hard-rejects above 100 MB.
+  if [ -f "$f" ]; then
+    sz=$(stat -c%s "$f" 2>/dev/null || echo 0)
+    if [ "$sz" -gt 52428800 ]; then
+      note "$f  ($((sz/1048576)) MB -- exceeds GitHub's 50 MB warning threshold)"
+    fi
+  fi
+done <<< "$staged"
+
+# Credential-shaped strings in the staged diff. Exclude this directory: the
+# detector's own patterns live here and would otherwise match themselves.
+if git diff --cached -U0 -- . ':(exclude).githooks/*' \
+     | grep -qiE '(ghp_|github_pat_|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'; then
+  note "a staged line looks like an API token or private key"
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo
+  echo "Commit refused by .githooks/pre-commit."
+  echo "If a listed file genuinely belongs in the public release:"
+  echo "    git commit --no-verify"
+  exit 1
+fi
+exit 0
