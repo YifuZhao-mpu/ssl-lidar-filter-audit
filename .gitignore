@@ -1,0 +1,43 @@
+# --- data and checkpoints: never commit, these are 100 MB - 600 MB each ---
+*.pkl
+*.pth
+*.bin
+*.npy
+*.npz
+work_dirs/
+cache/
+data/
+infos/
+
+# --- run outputs ---
+*.log
+outputs_*.log
+# ...but the released per-run evaluation logs are the point of results/
+!results/**/*.log
+nohup.out
+*.out
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+
+# --- LaTeX build artifacts ---
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.toc
+
+# --- editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+*.swp
