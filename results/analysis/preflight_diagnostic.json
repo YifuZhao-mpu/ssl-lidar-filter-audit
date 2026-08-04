@@ -1,0 +1,198 @@
+{
+  "score_filter": "R7b_perclass_only",
+  "camera_filter": "R7c_consensus",
+  "C1_vocabulary": {
+    "kept_total": 627587,
+    "out_of_vocab_boxes": 170837,
+    "out_of_vocab_share": 0.27221245819304735,
+    "approx_mapped_share": 0.009391526593125733,
+    "covered_share": 0.7277875418069526,
+    "per_class_kept": {
+      "car": 263745,
+      "truck": 36713,
+      "construction_vehicle": 5894,
+      "bus": 6170,
+      "trailer": 7624,
+      "barrier": 98291,
+      "motorcycle": 6095,
+      "bicycle": 3205,
+      "pedestrian": 127304,
+      "traffic_cone": 72546
+    }
+  },
+  "C2_independence": {
+    "real_offdiag_mean": 0.41762742949010034,
+    "real_offdiag_median": 0.47256904155569823,
+    "real_offdiag_p90": 0.564401424111123,
+    "scaffold_offdiag_mean": 0.033608785552610855,
+    "n_boxes": 146698,
+    "per_class_real_r": {
+      "car": 0.48848474571089534,
+      "pedestrian": 0.3541230809848479,
+      "truck": 0.294553472050812,
+      "barrier": 0.0,
+      "traffic_cone": 0.0
+    },
+    "max_informative_class_r": 0.48848474571089534,
+    "null_classes": [
+      "barrier",
+      "traffic_cone"
+    ]
+  },
+  "C3_selectivity": {
+    "rows": [
+      {
+        "class": "barrier",
+        "kept_base": 98291,
+        "kept_gate": 317681,
+        "keep_ratio": 3.2320456603351273,
+        "P_base": 68.64412815008495,
+        "P_gate": 27.24210764886789,
+        "dP": -41.402020501217066,
+        "R_base": 56.96351079816963,
+        "R_gate": 73.06536311905847,
+        "dR": 16.101852320888845,
+        "verdict": "ok",
+        "out_of_vocab": true
+      },
+      {
+        "class": "bicycle",
+        "kept_base": 3205,
+        "kept_gate": 635,
+        "keep_ratio": 0.1981279251170047,
+        "P_base": 50.51482059282371,
+        "P_gate": 66.61417322834646,
+        "dP": 16.09935263552275,
+        "R_base": 17.935083637974962,
+        "R_gate": 4.685942173479561,
+        "dR": -13.249141464495402,
+        "verdict": "trade",
+        "out_of_vocab": false
+      },
+      {
+        "class": "bus",
+        "kept_base": 6170,
+        "kept_gate": 1178,
+        "keep_ratio": 0.19092382495948138,
+        "P_base": 73.93841166936791,
+        "P_gate": 40.492359932088284,
+        "dP": -33.446051737279625,
+        "R_base": 36.460997442455245,
+        "R_gate": 3.8123401534526855,
+        "dR": -32.64865728900256,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      },
+      {
+        "class": "car",
+        "kept_base": 263745,
+        "kept_gate": 129173,
+        "keep_ratio": 0.4897647348764905,
+        "P_base": 77.29966444861513,
+        "P_gate": 50.447849008693765,
+        "dP": -26.851815439921367,
+        "R_base": 51.79041386808653,
+        "R_gate": 16.553961366892587,
+        "dR": -35.236452501193945,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      },
+      {
+        "class": "construction_vehicle",
+        "kept_base": 5894,
+        "kept_gate": 1209,
+        "keep_ratio": 0.20512385476756023,
+        "P_base": 59.06006107906345,
+        "P_gate": 40.77750206782465,
+        "dP": -18.282559011238803,
+        "R_base": 30.569948186528496,
+        "R_gate": 4.329498550979187,
+        "dR": -26.24044963554931,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      },
+      {
+        "class": "motorcycle",
+        "kept_base": 6095,
+        "kept_gate": 1248,
+        "keep_ratio": 0.2047579983593109,
+        "P_base": 53.486464315012306,
+        "P_gate": 71.63461538461539,
+        "dP": 18.14815106960308,
+        "R_base": 33.79639228695832,
+        "R_gate": 9.268090400165871,
+        "dR": -24.528301886792452,
+        "verdict": "trade",
+        "out_of_vocab": false
+      },
+      {
+        "class": "pedestrian",
+        "kept_base": 127304,
+        "kept_gate": 17703,
+        "keep_ratio": 0.13906083076729717,
+        "P_base": 67.98922264814931,
+        "P_gate": 51.59577472744733,
+        "dP": -16.39344792070198,
+        "R_base": 49.04186120302797,
+        "R_gate": 5.17542269162776,
+        "dR": -43.86643851140021,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      },
+      {
+        "class": "traffic_cone",
+        "kept_base": 72546,
+        "kept_gate": 387660,
+        "keep_ratio": 5.343644032751634,
+        "P_base": 52.82717172552587,
+        "P_gate": 13.160501470360625,
+        "dP": -39.66667025516524,
+        "R_base": 49.166110740493664,
+        "R_gate": 65.45132652537589,
+        "dR": 16.285215784882226,
+        "verdict": "ok",
+        "out_of_vocab": true
+      },
+      {
+        "class": "trailer",
+        "kept_base": 7624,
+        "kept_gate": 5126,
+        "keep_ratio": 0.6723504721930745,
+        "P_base": 70.98635886673662,
+        "P_gate": 35.95396020288724,
+        "dP": -35.032398663849385,
+        "R_base": 27.46511037807663,
+        "R_gate": 9.352956102512053,
+        "dR": -18.112154275564578,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      },
+      {
+        "class": "truck",
+        "kept_base": 36713,
+        "kept_gate": 10546,
+        "keep_ratio": 0.28725519570724267,
+        "P_base": 63.40260942990221,
+        "P_gate": 55.803148113028634,
+        "dP": -7.59946131687358,
+        "R_base": 33.662092004222764,
+        "R_gate": 8.510607528669974,
+        "dR": -25.15148447555279,
+        "verdict": "dominated",
+        "out_of_vocab": false
+      }
+    ],
+    "dominated_classes": [
+      "bus",
+      "car",
+      "construction_vehicle",
+      "pedestrian",
+      "trailer",
+      "truck"
+    ],
+    "n_dominated_in_vocab": 6,
+    "n_trade_in_vocab": 2,
+    "n_in_vocab": 8,
+    "median_keep_ratio_in_vocab": 0.20512385476756023
+  }
+}

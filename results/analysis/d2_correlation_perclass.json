@@ -1,0 +1,64 @@
+{
+  "pooled": {
+    "real_offdiag_mean": 0.27340016789412186,
+    "real_offdiag_median": 0.4032885909373795,
+    "real_offdiag_n_pairs": 20,
+    "pilot_offdiag_mean": 0.005830915114593385,
+    "pilot_offdiag_median": 0.0018894573989510436,
+    "pilot_offdiag_n_pairs": 20,
+    "delta_mean": 0.2675692527795285,
+    "n_boxes": 146698
+  },
+  "per_class": {
+    "car": {
+      "n_boxes": 57538,
+      "real_offdiag_mean": 0.48848474571089534,
+      "real_offdiag_median": 0.513084125673765,
+      "real_offdiag_n_pairs": 12,
+      "pilot_offdiag_mean": 0.0061684950349221905,
+      "pilot_offdiag_median": 0.004863919777222587,
+      "pilot_offdiag_n_pairs": 12,
+      "delta_mean": 0.48231625067597317
+    },
+    "pedestrian": {
+      "n_boxes": 44255,
+      "real_offdiag_mean": 0.3541230809848479,
+      "real_offdiag_median": 0.3988263317981825,
+      "real_offdiag_n_pairs": 12,
+      "pilot_offdiag_mean": -0.004611992265043,
+      "pilot_offdiag_median": -0.003636136947592526,
+      "pilot_offdiag_n_pairs": 12,
+      "delta_mean": 0.3587350732498909
+    },
+    "truck": {
+      "n_boxes": 15796,
+      "real_offdiag_mean": 0.294553472050812,
+      "real_offdiag_median": 0.3094459859024732,
+      "real_offdiag_n_pairs": 14,
+      "pilot_offdiag_mean": 0.01337531916136947,
+      "pilot_offdiag_median": 0.015690634626141772,
+      "pilot_offdiag_n_pairs": 14,
+      "delta_mean": 0.28117815288944253
+    },
+    "barrier": {
+      "n_boxes": 10606,
+      "real_offdiag_mean": 0.0,
+      "real_offdiag_median": 0.0,
+      "real_offdiag_n_pairs": 12,
+      "pilot_offdiag_mean": -0.006941914759724262,
+      "pilot_offdiag_median": -0.0020469618096203334,
+      "pilot_offdiag_n_pairs": 12,
+      "delta_mean": 0.006941914759724262
+    },
+    "traffic_cone": {
+      "n_boxes": 8294,
+      "real_offdiag_mean": 0.0,
+      "real_offdiag_median": 0.0,
+      "real_offdiag_n_pairs": 12,
+      "pilot_offdiag_mean": 0.008804605203685232,
+      "pilot_offdiag_median": -0.006019549832912906,
+      "pilot_offdiag_n_pairs": 12,
+      "delta_mean": -0.008804605203685232
+    }
+  }
+}
