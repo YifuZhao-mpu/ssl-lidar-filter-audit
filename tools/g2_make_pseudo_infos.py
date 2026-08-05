@@ -20,7 +20,7 @@ import numpy as np
 
 sys.path.insert(0, '/root/BMVC2026')
 from tools.g2_filter_pseudo import (
-    NUSC_CLASSES, CAMERAS, NUSC_TO_COCO, box_supports,
+    NUSC_CLASSES, CAMERAS, NUSC_TO_COCO, box_supports, m_thresh,
 )
 
 
@@ -40,6 +40,12 @@ SINGLE_THR_DEFAULT = 0.40
 # any-view support (max_sup > 0) — no newly tuned constants.
 G_COMMON = {'car', 'pedestrian', 'truck'}
 
+# R19 conjunctive control: the six-camera consensus constants, reused verbatim
+# from g2_filter_pseudo.py so the camera term is byte-for-byte the rule audited
+# as R7c. Nothing here is newly tuned.
+CONSENSUS_TAU = 0.15     # tau_c, soft mean-support threshold
+CONSENSUS_GAMMA = 0.20   # gamma, per-view hard floor
+
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -50,7 +56,8 @@ def parse_args():
     p.add_argument('--variant', required=True,
                    choices=['single_thr', 'perclass_boost',
                             'perclass_only', 'boost_only',
-                            'hybrid_posonly', 'passthrough'])
+                            'hybrid_posonly', 'perclass_and_consensus',
+                            'passthrough'])
     p.add_argument('--single-thr', type=float, default=SINGLE_THR_DEFAULT)
     p.add_argument('--out-pkl', required=True)
     p.add_argument('--iou2d-thr', type=float, default=0.30)
@@ -122,6 +129,51 @@ def filter_hybrid_posonly(pb, sup, valid):
     return keep
 
 
+def filter_perclass_and_consensus(pb, sup, valid):
+    """R19 — conjunctive control: per-class score threshold AND six-camera
+    consensus.
+
+        keep = passes_perclass AND (consensus OR passthrough OR no_valid_cam)
+
+    The camera term is the six-camera consensus keep-rule of
+    g2_filter_pseudo.py reproduced exactly, including its passthrough branch
+    for classes with no COCO mapping and its fallback for boxes no camera can
+    see. Camera support therefore acts purely as a *veto* layered on top of
+    the score gate, and only where camera evidence actually exists; everywhere
+    else the rule degrades to perclass_only.
+
+    This is the control that separates "camera evidence is worthless" from
+    "removing the confidence floor is harmful": the mask is by construction a
+    strict subset of perclass_only, so any downstream difference is
+    attributable to the camera veto alone. It is the conjunctive structure
+    used by DetMatch (threshold first, agreement second), which the audited
+    camera-support family does not have.
+    """
+    N = len(pb['boxes_lidar'])
+    if N == 0:
+        return np.zeros((0,), dtype=bool)
+    scores = pb['scores']; labels = pb['labels']
+
+    passes_pc = np.array(
+        [scores[i] >= PER_CLASS_THR[NUSC_CLASSES[int(labels[i])]]
+         for i in range(N)], dtype=bool)
+
+    passthrough = np.array(
+        [not NUSC_TO_COCO.get(NUSC_CLASSES[int(l)], set()) for l in labels],
+        dtype=bool)
+
+    n_valid = valid.sum(axis=1)
+    has_valid = n_valid > 0
+    sum_sup = sup.sum(axis=1)
+    mean_sup = np.where(n_valid > 0, sum_sup / np.clip(n_valid, 1, None), 0.0)
+    hits = (sup >= CONSENSUS_GAMMA).sum(axis=1)
+    m = np.array([m_thresh(int(n)) for n in n_valid])
+    consensus = (mean_sup >= CONSENSUS_TAU) & (hits >= m) & has_valid
+
+    camera_ok = consensus | passthrough | (~has_valid)
+    return passes_pc & camera_ok
+
+
 def main():
     args = parse_args()
     out = Path(args.out_pkl)
@@ -137,7 +189,8 @@ def main():
     info_by_tok = {i['token']: i for i in src['infos']}
 
     needs_support = args.variant in ('perclass_boost', 'perclass_only',
-                                     'boost_only', 'hybrid_posonly')
+                                     'boost_only', 'hybrid_posonly',
+                                     'perclass_and_consensus')
     if needs_support:
         if not args.det_cache:
             raise SystemExit(f'--det-cache is required for variant {args.variant}')
@@ -182,6 +235,9 @@ def main():
         elif args.variant == 'hybrid_posonly':
             sup, valid = supports[tok]
             keep = filter_hybrid_posonly(pb, sup, valid)
+        elif args.variant == 'perclass_and_consensus':
+            sup, valid = supports[tok]
+            keep = filter_perclass_and_consensus(pb, sup, valid)
         else:
             sup, valid = supports[tok]
             mode = {'perclass_boost': 'all',

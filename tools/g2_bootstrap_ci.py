@@ -5,11 +5,17 @@ Scene-level (block) bootstrap confidence intervals for nuScenes detection NDS.
 Motivation
 ----------
 The paper reports NDS point estimates for 7 pseudo-label filters x up to 3 seeds and
-claims that a within-family spread of <= 0.5 NDS is "seed noise" while the +6.9..+11.1
-NDS score-vs-camera family gap is real.  Neither claim is currently accompanied by any
-uncertainty estimate.  This driver supplies one *evaluation* uncertainty estimate (it
-does NOT estimate training/seed variance -- see CAVEAT at the bottom of this docstring)
-by non-parametrically resampling the val set.
+claims the +6.9..+11.1 NDS score-vs-camera family gap is real while within-family
+differences are not.  Neither claim was originally accompanied by any uncertainty
+estimate.  This driver supplies one *evaluation* uncertainty estimate (it does NOT
+estimate training/seed variance -- see CAVEAT at the bottom of this docstring) by
+non-parametrically resampling the val set.
+
+NOTE (2026-07-29): running this driver falsified the paper's then-standing claim that
+within-family spread was <= 0.5 NDS and the family gap "an order of magnitude" larger.
+Measured spreads reach 2.74 NDS (camera family, seed 2) and the ratio is 2.5x, not 10x.
+That wording is gone from the manuscript; it is recorded here because this docstring
+used to assert it.
 
 Design
 ------
@@ -166,6 +172,9 @@ for _r in [
     _R('R7c_s1', 'R7c', 1, 'camera', '6-cam consensus', 'R7c_s1_external_eval', 0.3655),
     _R('R7c_s2', 'R7c', 2, 'camera', '6-cam consensus', 'R7c_ssl_5p_s2_consensus_external_eval', 0.3661),
     # ---- hybrid ----------------------------------------------------------------------
+    _R('R19_s0', 'R19', 0, 'conjunctive', 'perclass AND consensus',
+       'R19_ssl_5p_s0_perclass_and_consensus_external_eval', 0.3332),
+
     _R('R18_s0', 'R18', 0, 'hybrid', 'class-aware pos-only', 'R18_ssl_5p_s0_hybrid_posonly_external_eval', 0.4124),
     _R('R18_s2', 'R18', 2, 'hybrid', 'class-aware pos-only', 'R18_ssl_5p_s2_hybrid_posonly_external_eval', 0.4546),
     # ---- shuffle interventions (s0 only) ---------------------------------------------

@@ -38,7 +38,7 @@ without cloning anything.
 |------|----------|
 | `patch/` | `nusc_lidar_ssl_dataset.py` — the `lidar2ego` `_format_bbox` fix, as a drop-in `NuScenesDataset` subclass override |
 | `configs/` | 36 mmdetection3d configs: per-seed supervised teachers and every SSL student in the filter family |
-| `tools/` | Pseudo-label dumping, the seven filter implementations, the class-aware positive-only hybrid, the 2D-detection cache, the support-correlation and per-class kept/precision/recall audits, the scene-level block bootstrap and the pre-flight diagnostic |
+| `tools/` | Pseudo-label dumping, the seven filter implementations, the class-aware positive-only hybrid, the gate-matched conjunctive control, the 2D-detection cache, the support-correlation and per-class kept/precision/recall audits, the scene-level block bootstrap and the pre-flight diagnostic |
 | `tools/pipelines/` | The shell drivers that sequenced the runs, kept verbatim as a record of execution order |
 | `results/analysis/` | Bootstrap confidence intervals, support-correlation statistics, pilot cocoF1 per seed, per-class kept/P/R, pre-flight diagnostic — all JSON |
 | `results/per_run/` | 34 `metrics_summary.json` files, one per evaluated run, under the patched protocol on `val_full = 6019` |
@@ -61,6 +61,18 @@ Regenerating the pseudo-label dumps and retraining the students needs a GPU;
 the full grid is ≈380 GPU-h on a single 96 GB card (Appendix E of the paper).
 
 ## Notes for anyone reproducing
+
+**Two different Python environments, and they are not interchangeable.**
+Training and pseudo-label generation run in the mmdetection3d environment
+(`numpy 1.26`); the bootstrap driver runs in an environment with `numpy 2.x`.
+The two write incompatible pickles in *both* directions — numpy 2.x pickles
+reference `numpy._core`, which numpy 1.26 cannot import, and the cached
+`bootstrap_prep/gt_val_filtered.pkl` in this study was written by numpy 2.x.
+So: generate pseudo-label infos with the **mmdet3d** interpreter, and run
+`tools/g2_bootstrap_ci.py` with the **numpy-2.x** one. Mixing them fails at
+dataset construction or at bootstrap worker init, with a
+`ModuleNotFoundError: No module named 'numpy._core.numeric'` that does not
+name the real cause.
 
 **Absolute paths are preserved deliberately.** The configs and tool defaults
 still point at `/root/BMVC2026/...`, which is where these runs actually
