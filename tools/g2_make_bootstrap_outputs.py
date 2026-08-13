@@ -22,10 +22,19 @@ REPO = '/workspace/BMVC2026'
 WORK_DIRS = os.path.join(REPO, 'work_dirs')
 METRICS_REL = os.path.join('results', 'pts_bbox', 'metrics_summary.json')
 IN_JSON = os.path.join(REPO, 'cache', 'bootstrap_ci.json')
+# Runs bootstrapped in their own later pass, merged in here so the table is
+# emitted rather than hand-edited. R19 (the gate-matched conjunctive arm) was
+# run on 2026-08-05, after the 26-run main pass, and has its own wall clock and
+# worker count -- which is why meta['runs'] below is deliberately NOT extended.
+IN_JSON_EXTRA = [os.path.join(REPO, 'cache', 'bootstrap_ci_R19.json'),
+                 os.path.join(REPO, 'cache', 'bootstrap_ci_R20_contrast.json'),
+                 os.path.join(REPO, 'cache', 'bootstrap_ci_R19_seeds.json')]
 OUT_TEX = os.path.join(REPO, 'figures', 'table_bootstrap_ci.tex')
 OUT_MD = os.path.join(REPO, 'cache', 'BOOTSTRAP_SUMMARY.md')
 
 # Display order / names for the table.  (tag, latex label, block header before it)
+# The last block holds the two gate-matched arms: both are layered on the
+# per-class score gate and differ only in what the camera term may do.
 ROWS = [
     ('R4b/R4', 'Labeled-only (no SSL)', None),
     ('R6',  'Single threshold',        r'\emph{Score-based filters}'),
@@ -35,14 +44,84 @@ ROWS = [
     ('R8c', 'Any-view',                None),
     ('R8d', r'Max-cam $K{=}5$',        None),
     ('R7c', '6-camera consensus',      None),
-    ('R18', 'Class-aware pos.-only',   r'\emph{Hybrid}'),
+    ('R18', 'Class-aware pos.-only',   r'\emph{Subordinated to the score gate}'),
+    ('R19', r'Per-class $\land$ consensus', None),
+    ('R20', r'\quad\emph{vs.} matched random prune', None),
 ]
 SEEDS = [0, 1, 2]
 
 
 def load():
+    """Main bootstrap pass, with any later single-run passes merged in.
+
+    Merging is restricted to the per-run payloads. `pairs`, `family_gap` and
+    `within_family` are left alone: the extra passes carry them empty, and the
+    family-gap statistic is defined over the 7-filter family only.
+    """
     with open(IN_JSON) as f:
-        return json.load(f)
+        d = json.load(f)
+    d['meta']['runs_extra'] = []
+    for path in IN_JSON_EXTRA:
+        if not os.path.exists(path):
+            print('WARN: extra bootstrap file missing, skipping: %s' % path)
+            continue
+        with open(path) as f:
+            e = json.load(f)
+        if e['meta']['B_requested'] != d['meta']['B_requested']:
+            raise SystemExit(
+                'B mismatch: %s has B=%d, main pass has B=%d -- refusing to '
+                'merge intervals computed at different replicate counts'
+                % (path, e['meta']['B_requested'], d['meta']['B_requested']))
+        # A later pass re-bootstraps the shared reference arms so its contrasts
+        # are paired within that pass. Those keys are expected duplicates: keep
+        # the main pass's copy, but refuse to merge if the two disagree, since
+        # the driver is deterministic (replicate b is default_rng(b) over the
+        # sorted scene list) and any disagreement means the two passes did not
+        # see the same data.
+        fresh = []
+        for k, v in e['runs'].items():
+            if k not in d['runs']:
+                fresh.append(k)
+                continue
+            got, ref = v['point_nds'], d['runs'][k]['point_nds']
+            if abs(got - ref) > 1e-12:
+                raise SystemExit(
+                    'run %s disagrees between %s and the main pass: '
+                    '%.17g vs %.17g' % (k, os.path.basename(path), got, ref))
+            ra = d['replicate_nds'].get(k, {})
+            rb = e.get('replicate_nds', {}).get(k, {})
+            common = set(ra) & set(rb)
+            bad = [x for x in common if ra[x] != rb[x]]
+            if bad:
+                raise SystemExit(
+                    'run %s has %d/%d differing replicates between %s and the '
+                    'main pass -- the passes are not paired'
+                    % (k, len(bad), len(common), os.path.basename(path)))
+        for k in fresh:
+            d['runs'][k] = e['runs'][k]
+            if k in e.get('replicate_nds', {}):
+                d['replicate_nds'][k] = e['replicate_nds'][k]
+            if k in e.get('point_estimate_verification', {}):
+                d['point_estimate_verification'][k] = \
+                    e['point_estimate_verification'][k]
+        if not fresh:
+            continue
+        d['meta']['runs_extra'].append({
+            'keys': fresh,
+            'source': os.path.basename(path),
+            'wall_clock_s': e['meta'].get('wall_clock_s'),
+            'workers': e['meta'].get('workers'),
+            'created': e['meta'].get('created'),
+        })
+    return d
+
+
+def all_run_keys(d):
+    """Main-pass run keys followed by any merged-in extras, in display order."""
+    keys = list(d['meta']['runs'])
+    for x in d['meta'].get('runs_extra', []):
+        keys.extend(x['keys'])
+    return keys
 
 
 def index_runs(d):
@@ -263,6 +342,14 @@ def make_md(d, idx, errs, warns):
     A('  bootstrap distribution. Wall clock %.0f s (%.2f h) on %d CPU worker processes; no GPU.'
       % (m['wall_clock_s'], m['wall_clock_s'] / 3600.0, m['workers']))
     A('* **Runs covered.** %s' % ', '.join(m['runs']))
+    for x in m.get('runs_extra', []):
+        A('* **Merged from a later pass.** %s, bootstrapped separately on %s'
+          % (', '.join('`%s`' % k for k in x['keys']), x['created']))
+        A('  under the identical protocol and the same B = %d, from `cache/%s`'
+          % (B, x['source']))
+        A('  (wall clock %.0f s on %d workers). These runs are not part of the'
+          % (x['wall_clock_s'], x['workers']))
+        A('  family-gap statistic, which is defined over the 7-filter family only.')
     A('* **Reproduce with:** `python tools/g2_bootstrap_ci.py --runs main5p --B %d --workers %d'
       % (B, m['workers']))
     A('  --chunk %d`. The driver is deterministic: replicate *b* is `numpy.random.default_rng(b)`'
@@ -284,9 +371,10 @@ def make_md(d, idx, errs, warns):
     A('the run\'s cached `metrics_summary.json` at full double precision:')
     A('')
     cn = cached_nds(d)
+    ALL = all_run_keys(d)
     A('| run | recomputed NDS (this driver) | cached NDS (`metrics_summary.json`) | bit-identical |')
     A('|---|---|---|---|')
-    for k in m['runs']:
+    for k in ALL:
         got = d['runs'][k]['point_nds']
         ref = cn.get(k)
         A('| `%s` | %.17g | %s | %s |'
@@ -294,9 +382,9 @@ def make_md(d, idx, errs, warns):
              'yes' if (ref is not None and got == ref) else
              ('n/a' if ref is None else 'NO')))
     A('')
-    nex = sum(1 for k in m['runs'] if k in cn and d['runs'][k]['point_nds'] == cn[k])
+    nex = sum(1 for k in ALL if k in cn and d['runs'][k]['point_nds'] == cn[k])
     A('%d of %d runs reproduce the cached NDS to the last bit (0 ulp), and all %d match the paper\'s'
-      % (nex, len(m['runs']), len(m['runs'])))
+      % (nex, len(ALL), len(ALL)))
     A('4-decimal published values. The scene->token restriction, the box injection and the re-keying')
     A('machinery are therefore exercised on a case whose answer is known, and they are correct.')
     A('')
@@ -495,7 +583,7 @@ def make_md(d, idx, errs, warns):
     A('')
     A('| run | filter | seed | point NDS | boot. mean | SE | 95% CI | width |')
     A('|---|---|---|---|---|---|---|---|')
-    for k in m['runs']:
+    for k in all_run_keys(d):
         r = d['runs'][k]
         A('| `%s` | %s | %d | %.4f | %.4f | %.4f | [%.4f, %.4f] | %.4f |'
           % (k, r['label'], r['seed'], r['point_nds'], r['boot_mean_nds'], r['boot_se_nds'],

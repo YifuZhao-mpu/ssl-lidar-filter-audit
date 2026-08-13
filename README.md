@@ -4,11 +4,15 @@ Code, configurations and per-run results for the paper *"Score-based versus
 camera-support pseudo-label filtering for semi-supervised LiDAR 3D object
 detection: a controlled study with design implications"* (under review).
 
-> **Status: released at submission time.** Everything needed to reproduce the
-> analysis, the figures and the tables is here now. Bulk artifacts are not —
-> nuScenes itself, the teacher checkpoints (~36 MB each), and the raw
-> pseudo-label dumps (~4.0 M boxes per seed) are too large for this repository
-> and are regenerable from the configs and tools below.
+> **Status: released at submission time.** The code, the configurations and the
+> per-run and analysis outputs behind every number in the paper are here now.
+> Bulk artifacts are not — nuScenes itself, the teacher checkpoints (~36 MB
+> each), the raw pseudo-label dumps (~4.0 M boxes per seed) and the cached
+> per-run detections are too large for this repository and are regenerable
+> from the configs and tools below. Because several analysis scripts read
+> those bulk paths directly, not everything re-runs unmodified from a bare
+> clone; "What does and does not re-run from this repository" below says
+> exactly which does.
 
 ## What the study does
 
@@ -28,37 +32,48 @@ is trained.
 
 A side contribution is independent of the rest: a ≤30-line patch to mmdetection3d's
 `NuScenesDataset._format_bbox` correcting a 90° `lidar2ego` pose misalignment that
-silently yields `NDS = 0` on LiDAR-only evaluation. **The full patch and its
-derivation are also reproduced in Appendix A of the paper**, so that fix is usable
-without cloning anything.
+silently yields `NDS = 0` on LiDAR-only evaluation. **The operative part of the
+patch and its derivation are reproduced in Appendix A of the paper**, so the fix
+is usable without cloning anything; the complete file is here in `patch/`.
 
 ## Layout
 
 | Path | Contents |
 |------|----------|
 | `patch/` | `nusc_lidar_ssl_dataset.py` — the `lidar2ego` `_format_bbox` fix, as a drop-in `NuScenesDataset` subclass override |
-| `configs/` | 36 mmdetection3d configs: per-seed supervised teachers and every SSL student in the filter family |
+| `configs/` | 40 mmdetection3d configs: per-seed supervised teachers and every SSL student in the filter family |
 | `tools/` | Pseudo-label dumping, the seven filter implementations, the class-aware positive-only hybrid, the gate-matched conjunctive control, the 2D-detection cache, the support-correlation and per-class kept/precision/recall audits, the scene-level block bootstrap and the pre-flight diagnostic |
 | `tools/pipelines/` | The shell drivers that sequenced the runs, kept verbatim as a record of execution order |
 | `results/analysis/` | Bootstrap confidence intervals, support-correlation statistics, pilot cocoF1 per seed, per-class kept/P/R, pre-flight diagnostic — all JSON |
-| `results/per_run/` | 34 `metrics_summary.json` files, one per evaluated run, under the patched protocol on `val_full = 6019` |
-| `figures/` | Deterministic figure and table generators; they read `results/` and emit the paper's figures and LaTeX tables |
+| `results/per_run/` | 38 files, one per evaluated run: each is that run's mmdetection3d `metrics_summary.json`, renamed to `<TAG>__results__pts_bbox.json` (the four 2026-08-05/08-12 arms, added later, are plain `<TAG>.json`), under the patched protocol on `val_full = 6019` |
+| `figures/` | Deterministic figure and table generators that emit the paper's figures and LaTeX tables. They read the *working tree* (`work_dirs/`, `cache/`), not `results/` — see "What does and does not re-run from this repository" below |
 
-## Reproducing without a GPU
+## What does and does not re-run from this repository
 
-The analysis layer is CPU-only and runs off `results/analysis/`:
+Be aware of the distinction between *auditing* a number and *recomputing* it.
+Every number in the paper can be audited here: `results/per_run/` holds the
+evaluation output of each of the 38 runs and `results/analysis/` holds the
+output of every analysis pass. Recomputing them from scratch is a different
+matter, because the analysis scripts were written to run inside the working
+tree and read `work_dirs/` and `cache/`, which hold the bulk artifacts this
+repository excludes. Concretely:
 
-- **Scene-level block bootstrap** (`tools/g2_bootstrap_ci.py`) — B = 1000
-  replicates × 26 runs, ≈4.3 h CPU. Point estimates reproduce the published NDS
-  from cached detections; 23 of 26 are bit-identical, maximum deviation
-  5.6 × 10⁻¹⁷.
-- **Pre-flight diagnostic** (`tools/g2_preflight_diagnostic.py`) — the three
-  checks (vocabulary coverage, view independence, gate selectivity), seconds.
-- **Per-class kept/P/R audit** (`tools/g2_perclass_kept_pr.py`).
-- **Figures and tables** (`figures/gen_*.py`).
+| Script | Reads | Re-runs from a bare clone? |
+|---|---|---|
+| `tools/g2_preflight_diagnostic.py` | three JSONs that ship in `results/analysis/`: `perclass_kept_pr_5p_s0.json`, `d2_correlation_analysis.json`, `d2_correlation_perclass.json` | **Yes**, and it is the only one — after repointing `ROOT` (line 37, hardcoded to `/workspace/BMVC2026`) at your clone and copying `results/analysis/*.json` into `<ROOT>/cache/`. Seconds. |
+| `tools/g2_bootstrap_ci.py` | `work_dirs/<TAG>/results/pts_bbox/results_nusc.json` (~12 GB over 38 runs) and `cache/bootstrap_prep/` (~3.1 GB) | **No.** Its *output* ships as `results/analysis/bootstrap_ci*.json`. B = 1000 replicates, run in four passes (26-run main, 8-run supplement, and two contrast passes for the 2026-08-12 arms), ≈9.6 h CPU in total when the detections are present. All 38 evaluated runs now carry an interval; point estimates reproduce the published NDS, 26 of 30 bit-identical in the merged table, max deviation 5.6 × 10⁻¹⁷. |
+| `tools/g2_perclass_kept_pr.py` | the raw pseudo-label dumps and the unlabeled `infos` pickles | **No** — both are bulk artifacts. Output ships as `results/analysis/perclass_kept_pr_5p_s0.json`. |
+| `figures/gen_*.py` | per-run `eval.log` under `work_dirs/`, plus `cache/` | **No** as written. The same NDS values are in `results/per_run/*.json` under `nd_score` and `label_aps`, so the plots are re-derivable, but you would have to repoint `figures/paper_plot_style.py:load_run` at `results/per_run/`. |
 
 Regenerating the pseudo-label dumps and retraining the students needs a GPU;
-the full grid is ≈380 GPU-h on a single 96 GB card (Appendix E of the paper).
+the full grid is ≈420 GPU-h on a single 96 GB card (Appendix E of the paper).
+
+## Pre-registration
+
+`PREREG_2026-08-12.md` fixes, *before* the runs existed, the decision rules for
+the two controls added on 2026-08-12: the seed replication of the conjunctive
+arm and the volume-matched random-pruning control. It records which branch each
+rule actually fired, including one argument the control forced us to withdraw.
 
 ## Notes for anyone reproducing
 
@@ -74,11 +89,18 @@ dataset construction or at bootstrap worker init, with a
 `ModuleNotFoundError: No module named 'numpy._core.numeric'` that does not
 name the real cause.
 
-**Absolute paths are preserved deliberately.** The configs and tool defaults
-still point at `/root/BMVC2026/...`, which is where these runs actually
-executed. They are kept verbatim rather than rewritten so the released configs
-remain an exact record of what produced the reported numbers. Substitute your
-own data root, `work_dir` and checkpoint paths before running.
+**Absolute paths are preserved deliberately, and there are two of them.** The
+configs and most tool defaults point at `/root/BMVC2026/...`, which is where
+these runs executed. Six later analysis scripts —
+`tools/g2_{bootstrap_ci,make_bootstrap_outputs,pilot_cocoF1,preflight_diagnostic}.py`
+and `figures/gen_{tables,fig1_family_gap}.py` — point at `/workspace/BMVC2026`
+instead: the project was relocated mid-study, and `/root/BMVC2026` became a
+symlink to the new location, so both roots resolved on the original machine.
+They are kept verbatim rather than rewritten so the released files remain an
+exact record of what produced the reported numbers. Substitute your own data
+root, `work_dir` and checkpoint paths before running — and note that the
+scripts hardcode these roots rather than deriving them, so an unmodified clone
+elsewhere will not find its inputs.
 
 **Initialization is not label-free.** Every arm — labeled-only controls,
 teachers and SSL students alike — loads the public mmdetection3d CenterPoint

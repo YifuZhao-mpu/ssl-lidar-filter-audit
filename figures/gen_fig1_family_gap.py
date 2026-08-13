@@ -4,8 +4,18 @@ THREE-SEED version (Package B, 2026-07-18). Supersedes the two-seed figure
 generated 2026-05-11; the paper text and Table 1 are three-seed, so the hero
 figure must be too.
 
+R19 revision (2026-08-10): both gate-matched arms are plotted, not just the
+additive one.  R20 revision (2026-08-12): R19 gained seeds 1 and 2, and the
+volume-matched random-pruning control was added beside it.
+
 Score-based filters cluster ~0.41-0.46; camera-support filters ~0.30-0.38.
-The class-aware positive-only hybrid (2 seeds) sits inside the score band.
+The two gate-matched arms are built on the same per-class score gate and land
+in OPPOSITE bands: the positive-only hybrid (rescue-only, seeds 0/2) sits
+inside the score band, while the conjunctive rule (camera as pure veto, three
+seeds) drops well below it.  The grey X is the control that qualifies that
+drop: it removes exactly as many boxes as the conjunctive rule, chosen at
+random, and lands essentially on top of it -- most of the conjunctive arm's
+loss is the removal rate, not the camera's choice.
 Grey band = same-init labeled-only fine-tune reference across the three seeds.
 """
 import sys
@@ -29,6 +39,21 @@ HYBRID_VARIANTS = [
     ('hybrid\npos-only', 'R18_ssl_5p_s0_hybrid_posonly', None,
      'R18_ssl_5p_s2_hybrid_posonly'),
 ]
+# R19: per-class threshold AND six-camera consensus, camera acting purely as a
+# veto. Seed 0 only -- the arm inherits none of the three-seed replication.
+CONJUNCTIVE_VARIANTS = [
+    ('perclass\n$\\wedge$ cons.',
+     'R19_ssl_5p_s0_perclass_and_consensus',
+     'R19_ssl_5p_s1_perclass_and_consensus',
+     'R19_ssl_5p_s2_perclass_and_consensus'),
+]
+# R20 (2026-08-12): volume-matched random pruning, the control that shows most
+# of the conjunctive arm's loss is the removal rate rather than the camera's
+# choice. Seed 0 only, and it belongs next to R19 because the two are matched
+# box-for-box per (keyframe, class).
+VOLUME_CONTROL_VARIANTS = [
+    ('random\nprune', 'R20_ssl_5p_s0_perclass_random_prune', None, None),
+]
 
 LABEL_ONLY = {
     's0': load_run('R4b')['NDS'],
@@ -41,8 +66,10 @@ SEED_DX = {'s0': -0.20, 's1': 0.00, 's2': 0.20}
 SEED_SIZE = {'s0': 78, 's1': 62, 's2': 62}
 
 # Sized for a full-text-width (figure*) slot so that 9pt labels render ~1:1
-# and need no downscaling: 24 data points do not fit legibly in one column.
-fig, ax = plt.subplots(1, 1, figsize=(7.0, 3.0))
+# and need no downscaling: 25 data points do not fit legibly in one column.
+# Widened from 7.0 when the conjunctive arm was added -- at 7.0 the last two
+# x-tick labels ("pos-only" / "consensus") touched.
+fig, ax = plt.subplots(1, 1, figsize=(8.6, 3.0))
 
 # Horizontal background bands marking the two families' empirical envelopes
 ax.axhspan(0.405, 0.465, color=BAND_SCORE, zorder=0)
@@ -58,8 +85,13 @@ ax.axhline(y=hi, color=COLOR_BASELINE, linestyle='--', linewidth=0.8,
 
 
 def plot_family(variants, x0, marker, colors, legend_prefix):
-    """Scatter one filter family, three seeds per variant. Returns x positions."""
+    """Scatter one filter family, three seeds per variant. Returns x positions.
+
+    Legend proxies are emitted only for seeds this family actually has, so the
+    seed-0-only conjunctive arm does not advertise absent seed-1/2 points.
+    """
     xs = list(range(x0, x0 + len(variants)))
+    seeds_present = []
     for x, (_, t0, t1, t2) in zip(xs, variants):
         for seed, tag in (('s0', t0), ('s1', t1), ('s2', t2)):
             if tag is None:
@@ -71,8 +103,12 @@ def plot_family(variants, x0, marker, colors, legend_prefix):
             ax.scatter([x + SEED_DX[seed]], [r['NDS']], s=SEED_SIZE[seed],
                        marker=marker, c=colors[seed], edgecolors='white',
                        linewidths=0.9, zorder=4)
-    # legend proxies, one per seed
+            if seed not in seeds_present:
+                seeds_present.append(seed)
+    # legend proxies, one per seed actually plotted
     for seed in ('s0', 's1', 's2'):
+        if seed not in seeds_present:
+            continue
         ax.scatter([], [], s=SEED_SIZE[seed], marker=marker, c=colors[seed],
                    edgecolors='white', linewidths=0.9,
                    label=f'{legend_prefix} (seed {seed[1]})')
@@ -82,22 +118,36 @@ def plot_family(variants, x0, marker, colors, legend_prefix):
 SCORE_COLORS = {'s0': COLOR_SCORE_S0, 's1': '#5b9bf8', 's2': COLOR_SCORE_S1}
 CAMERA_COLORS = {'s0': COLOR_CAMERA_S0, 's1': '#ec7b7b', 's2': COLOR_CAMERA_S1}
 HYBRID_COLORS = {'s0': '#7b3fa0', 's1': '#a97cc4', 's2': '#c9a8dc'}
+# Same purple hue as the hybrid: both are gate-matched arms on the same base.
+CONJ_COLORS = {'s0': '#7b3fa0', 's1': '#a97cc4', 's2': '#c9a8dc'}
+# Grey: chance, not a filter design.
+VOL_COLORS = {'s0': '#6b6b6b', 's1': '#9a9a9a', 's2': '#c0c0c0'}
 
 xs_score = plot_family(SCORE_VARIANTS, 0, 's', SCORE_COLORS, 'Score-based')
 xs_camera = plot_family(CAMERA_VARIANTS, len(xs_score), 'D', CAMERA_COLORS,
                         'Camera-support')
 xs_hybrid = plot_family(HYBRID_VARIANTS, len(xs_score) + len(xs_camera), 'o',
-                        HYBRID_COLORS, 'Hybrid pos-only')
+                        HYBRID_COLORS, 'Gate-matched, add-only')
+xs_conj = plot_family(CONJUNCTIVE_VARIANTS,
+                      len(xs_score) + len(xs_camera) + len(xs_hybrid), 'v',
+                      CONJ_COLORS, 'Gate-matched, veto-only')
+xs_vol = plot_family(VOLUME_CONTROL_VARIANTS,
+                     len(xs_score) + len(xs_camera) + len(xs_hybrid)
+                     + len(xs_conj), 'X', VOL_COLORS,
+                     'Volume-matched random prune')
 
-all_xs = xs_score + xs_camera + xs_hybrid
+xs_gated = xs_hybrid + xs_conj + xs_vol
+all_xs = xs_score + xs_camera + xs_gated
 all_labels = ([v[0] for v in SCORE_VARIANTS] + [v[0] for v in CAMERA_VARIANTS]
-              + [v[0] for v in HYBRID_VARIANTS])
+              + [v[0] for v in HYBRID_VARIANTS]
+              + [v[0] for v in CONJUNCTIVE_VARIANTS]
+              + [v[0] for v in VOLUME_CONTROL_VARIANTS])
 ax.set_xticks(all_xs)
 ax.set_xticklabels(all_labels, rotation=0, fontsize=FONT_SIZE - 1)
 
 # Vertical separators between sections
 sep_sc = (max(xs_score) + min(xs_camera)) / 2
-sep_ch = (max(xs_camera) + min(xs_hybrid)) / 2
+sep_ch = (max(xs_camera) + min(xs_gated)) / 2
 for sx in (sep_sc, sep_ch):
     ax.axvline(x=sx, color='#888', linestyle=':', linewidth=0.6, zorder=1)
 
@@ -114,7 +164,7 @@ ax.text(np.mean(xs_score), 0.478, 'score-based', ha='center', va='top',
         fontsize=FONT_SIZE, color=COLOR_SCORE_S0, fontweight='bold')
 ax.text(np.mean(xs_camera), 0.478, 'camera-support', ha='center', va='top',
         fontsize=FONT_SIZE, color=COLOR_CAMERA_S0, fontweight='bold')
-ax.text(np.mean(xs_hybrid), 0.478, 'hybrid', ha='center', va='top',
+ax.text(np.mean(xs_gated), 0.478, 'gate-matched', ha='center', va='top',
         fontsize=FONT_SIZE, color=HYBRID_COLORS['s0'], fontweight='bold')
 
 # The labeled-only band goes in the legend rather than as inline text, which
@@ -127,8 +177,9 @@ labeled_proxy = Patch(facecolor='#bbbbbb', alpha=0.55, edgecolor=COLOR_BASELINE,
 ax.set_ylabel('NDS (val_full=6019, ep10)')
 ax.set_xlabel('Pseudo-label filter variant @ 5% nuScenes labels')
 # Bottom headroom is reserved for the legend so it never overlaps the lowest
-# camera-support points (max-cam K=5 s0 = 0.3041).
-ax.set_ylim(0.255, 0.492)
+# camera-support points (max-cam K=5 s0 = 0.3041). Lowered from 0.255 when the
+# conjunctive arm added a legend entry and pushed the block up into them.
+ax.set_ylim(0.238, 0.492)
 ax.set_xlim(-0.6, len(all_xs) - 0.4)
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles + [labeled_proxy], labels + [labeled_proxy.get_label()],
@@ -141,7 +192,9 @@ plt.close(fig)
 # Provenance echo so the numbers in the caption can be checked against the log
 print('\nPlotted NDS values:')
 for name, group in (('score', SCORE_VARIANTS), ('camera', CAMERA_VARIANTS),
-                    ('hybrid', HYBRID_VARIANTS)):
+                    ('hybrid', HYBRID_VARIANTS),
+                    ('conjunctive', CONJUNCTIVE_VARIANTS),
+                    ('volume-ctl', VOLUME_CONTROL_VARIANTS)):
     for label, t0, t1, t2 in group:
         vals = {s: (load_run(t)['NDS'] if t and load_run(t) else None)
                 for s, t in (('s0', t0), ('s1', t1), ('s2', t2))}

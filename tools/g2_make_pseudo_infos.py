@@ -57,9 +57,13 @@ def parse_args():
                    choices=['single_thr', 'perclass_boost',
                             'perclass_only', 'boost_only',
                             'hybrid_posonly', 'perclass_and_consensus',
+                            'perclass_random_prune',
                             'passthrough'])
     p.add_argument('--single-thr', type=float, default=SINGLE_THR_DEFAULT)
     p.add_argument('--out-pkl', required=True)
+    p.add_argument('--prune-seed', type=int, default=19,
+                   help='RNG seed for perclass_random_prune; fixed so the '
+                        'volume-matched control is reproducible')
     p.add_argument('--iou2d-thr', type=float, default=0.30)
     p.add_argument('--det-score-thr', type=float, default=0.30)
     return p.parse_args()
@@ -174,6 +178,52 @@ def filter_perclass_and_consensus(pb, sup, valid):
     return passes_pc & camera_ok
 
 
+def filter_perclass_random_prune(pb, sup, valid, rng):
+    """Volume-matched control for R19: prune the SAME number of boxes the
+    conjunctive rule prunes, but choose them at random instead of by camera.
+
+    R19 removes 61.6% of perclass_only's boxes, so its -8.18 NDS confounds
+    "camera support vetoes the wrong boxes" with "supervision volume dropped by
+    61.6%". This arm holds volume fixed and randomises only *which* boxes go:
+
+        pool_c      = boxes of class c passing the per-class score threshold
+        k_c         = |pool_c| - |pool_c surviving the R19 camera veto|
+        keep        = pool_c minus k_c boxes drawn uniformly from pool_c
+
+    Matching is done per (keyframe, class), which is finer than the per-dump or
+    per-scene matching the paper asks for and implies both: every keyframe
+    contributes exactly as many boxes of exactly the same classes as it does
+    under R19. The two arms therefore differ in the *identity* of the removed
+    boxes and in nothing else -- not count, not class composition, not which
+    keyframes survive.
+
+    Both masks are computed here in the same pass rather than read back from
+    R19's output, so the counts cannot drift from the arm they are matched to.
+    `rng` must be a seeded Generator supplied by the caller.
+    """
+    N = len(pb['boxes_lidar'])
+    if N == 0:
+        return np.zeros((0,), dtype=bool)
+    labels = pb['labels']
+    pool = filter_perclass_boost(pb, sup, valid, mode='perclass')
+    vetoed = filter_perclass_and_consensus(pb, sup, valid)
+    # R19's mask is a strict subset of the pool by construction; assert it,
+    # because if it ever stops holding the matched count below is meaningless.
+    if np.any(vetoed & ~pool):
+        raise AssertionError('conjunctive mask is not a subset of perclass_only')
+
+    keep = pool.copy()
+    for cls_idx in np.unique(labels[pool]):
+        in_cls = pool & (labels == cls_idx)
+        k = int(in_cls.sum()) - int((vetoed & (labels == cls_idx)).sum())
+        if k <= 0:
+            continue
+        idx = np.flatnonzero(in_cls)
+        drop = rng.choice(idx, size=k, replace=False)
+        keep[drop] = False
+    return keep
+
+
 def main():
     args = parse_args()
     out = Path(args.out_pkl)
@@ -190,7 +240,8 @@ def main():
 
     needs_support = args.variant in ('perclass_boost', 'perclass_only',
                                      'boost_only', 'hybrid_posonly',
-                                     'perclass_and_consensus')
+                                     'perclass_and_consensus',
+                                     'perclass_random_prune')
     if needs_support:
         if not args.det_cache:
             raise SystemExit(f'--det-cache is required for variant {args.variant}')
@@ -216,6 +267,12 @@ def main():
     else:
         supports = None
 
+    rng = np.random.default_rng(args.prune_seed)
+    if args.variant == 'perclass_random_prune':
+        print(f'[+] random-prune RNG seed: {args.prune_seed} '
+              f'(numpy default_rng; iteration order is dict order of the '
+              f'unlabeled infos, which is deterministic for a given input)')
+
     new_infos = []
     n_kept_total = 0
     n_dropped_total = 0
@@ -238,6 +295,9 @@ def main():
         elif args.variant == 'perclass_and_consensus':
             sup, valid = supports[tok]
             keep = filter_perclass_and_consensus(pb, sup, valid)
+        elif args.variant == 'perclass_random_prune':
+            sup, valid = supports[tok]
+            keep = filter_perclass_random_prune(pb, sup, valid, rng)
         else:
             sup, valid = supports[tok]
             mode = {'perclass_boost': 'all',

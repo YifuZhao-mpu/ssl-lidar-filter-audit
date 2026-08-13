@@ -174,6 +174,16 @@ for _r in [
     # ---- hybrid ----------------------------------------------------------------------
     _R('R19_s0', 'R19', 0, 'conjunctive', 'perclass AND consensus',
        'R19_ssl_5p_s0_perclass_and_consensus_external_eval', 0.3332),
+    # Volume-matched control for R19: same number of boxes removed from the same
+    # confidence-gated pool, chosen at random instead of by camera support.
+    # PREREG_2026-08-12.md outcomes B1/B2/B3 turn on R19_s0 - R20_s0.
+    _R('R20_s0', 'R20', 0, 'volume_control', 'perclass AND random prune',
+       'R20_ssl_5p_s0_perclass_random_prune_external_eval', 0.3380),
+    # Seed replication of the conjunctive arm (PREREG_2026-08-12.md, A1/A2/A3).
+    _R('R19_s1', 'R19', 1, 'conjunctive', 'perclass AND consensus',
+       'R19_ssl_5p_s1_perclass_and_consensus_external_eval', 0.3855),
+    _R('R19_s2', 'R19', 2, 'conjunctive', 'perclass AND consensus',
+       'R19_ssl_5p_s2_perclass_and_consensus_external_eval', 0.4068),
 
     _R('R18_s0', 'R18', 0, 'hybrid', 'class-aware pos-only', 'R18_ssl_5p_s0_hybrid_posonly_external_eval', 0.4124),
     _R('R18_s2', 'R18', 2, 'hybrid', 'class-aware pos-only', 'R18_ssl_5p_s2_hybrid_posonly_external_eval', 0.4546),
