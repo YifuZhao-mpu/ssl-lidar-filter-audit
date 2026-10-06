@@ -6,11 +6,18 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import re
 import json
+import os
 from pathlib import Path
 
 FONT_SIZE = 9
 DPI = 300
-FIG_DIR = Path('/root/BMVC2026/figures')
+# Project root. Every path below used to be hardcoded to the original
+# root-owned checkout (/root/BMVC2026), which made the generators unrunnable
+# from any other working copy -- including the one the paper is built from.
+# Derive it from this file's own location instead; ARIS_PROJECT_ROOT overrides.
+PROJECT_ROOT = Path(os.environ.get(
+    'ARIS_PROJECT_ROOT', Path(__file__).resolve().parent.parent))
+FIG_DIR = Path(os.environ.get('ARIS_FIG_DIR', PROJECT_ROOT / 'figures'))
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 matplotlib.rcParams.update({
@@ -83,14 +90,14 @@ def parse_eval_log(path):
 
 def load_run(tag):
     """Convenience: load an external eval log by run tag."""
-    p = Path(f'/root/BMVC2026/work_dirs/{tag}_external_eval/eval.log')
+    p = PROJECT_ROOT / 'work_dirs' / f'{tag}_external_eval' / 'eval.log'
     return parse_eval_log(p)
 
 
 def load_correlation():
     """Load D2 correlation analysis JSON outputs."""
-    pooled_path = Path('/root/BMVC2026/cache/d2_correlation_analysis.json')
-    perclass_path = Path('/root/BMVC2026/cache/d2_correlation_perclass.json')
+    pooled_path = PROJECT_ROOT / 'cache' / 'd2_correlation_analysis.json'
+    perclass_path = PROJECT_ROOT / 'cache' / 'd2_correlation_perclass.json'
     out = {}
     if pooled_path.exists():
         out['pooled'] = json.loads(pooled_path.read_text())

@@ -176,10 +176,14 @@ labeled_proxy = Patch(facecolor='#bbbbbb', alpha=0.55, edgecolor=COLOR_BASELINE,
 
 ax.set_ylabel('NDS (val_full=6019, ep10)')
 ax.set_xlabel('Pseudo-label filter variant @ 5% nuScenes labels')
-# Bottom headroom is reserved for the legend so it never overlaps the lowest
-# camera-support points (max-cam K=5 s0 = 0.3041). Lowered from 0.255 when the
-# conjunctive arm added a legend entry and pushed the block up into them.
-ax.set_ylim(0.238, 0.492)
+# Bottom headroom is reserved for the legend. Two earlier values were not
+# enough: at 0.255 the block reached the lowest camera-support points
+# (max-cam K=5 s0 = 0.3041), and at 0.238 it still sat on top of the pink
+# camera-support band, whose lower edge is axhspan(0.295, ...). The legend
+# occupies roughly 0.065 in data units, so the floor has to clear
+# 0.295 - 0.065 - padding. At 0.208 the whole block sits in white space below
+# the band and covers neither the band nor any marker.
+ax.set_ylim(0.208, 0.492)
 ax.set_xlim(-0.6, len(all_xs) - 0.4)
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles + [labeled_proxy], labels + [labeled_proxy.get_label()],

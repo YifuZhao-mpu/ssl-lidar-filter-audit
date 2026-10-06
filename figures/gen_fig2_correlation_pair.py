@@ -3,7 +3,11 @@ Side-by-side 6×6 heatmaps for real teacher vs perturbed-GT pilot.
 Pooled means: real r=0.42, pilot r=0.03.
 """
 import sys
-sys.path.insert(0, '/root/BMVC2026/figures')
+import pathlib
+# Import paper_plot_style from this script's own directory rather than a
+# hardcoded absolute path, so the generator runs from any working copy
+# and from any cwd.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from paper_plot_style import *
 import numpy as np
 
@@ -14,8 +18,13 @@ pilot_mat = np.array(pooled['pilot_corr_matrix'])
 cameras = pooled['cameras']
 short_names = [c.replace('CAM_', '') for c in cameras]
 
+# wspace: panel (b)'s y-tick labels are long (FRONT_RIGHT, BACK_RIGHT,
+# BACK_LEFT, FRONT_LEFT) and at the matplotlib default spacing they ran left
+# into panel (a)'s plotting area, covering the (BACK_LEFT, FRONT_LEFT) cell
+# and the (FRONT_LEFT, FRONT_LEFT) diagonal. Reserve the gap explicitly.
 fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.4),
-                          gridspec_kw={'width_ratios': [1, 1.07]})
+                          gridspec_kw={'width_ratios': [1, 1.07],
+                                       'wspace': 0.55})
 
 vmin, vmax = -0.2, 1.0
 for ax, mat, title, mean_r in [

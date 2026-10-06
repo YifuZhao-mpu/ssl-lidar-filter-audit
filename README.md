@@ -30,17 +30,24 @@ paper reports the outcome, three diagnostics that explain it, a constructive
 control, and a pre-flight checklist that predicts the outcome before any student
 is trained.
 
-A side contribution is independent of the rest: a ≤30-line patch to mmdetection3d's
-`NuScenesDataset._format_bbox` correcting a 90° `lidar2ego` pose misalignment that
-silently yields `NDS = 0` on LiDAR-only evaluation. **The operative part of the
-patch and its derivation are reproduced in Appendix A of the paper**, so the fix
-is usable without cloning anything; the complete file is here in `patch/`.
+A side contribution is independent of the rest: a ≤30-line patch to the
+`NuScenesDataset._format_bbox` of the **BEVDet-lineage mmdet3d forks** — here
+[TEOcc](https://github.com/VDIGPKU/TEOcc), the codebase these runs are built on —
+correcting a 90° `lidar2ego` pose misalignment that silently yields `NDS = 0` when
+such a fork is driven LiDAR-only. **Upstream mmdetection3d 1.0.0rc4 does not have
+this defect**: its `lidar_nusc_box_to_global` composes `lidar2ego` and then
+`ego2global` correctly, and the identifier `ego_cam` does not appear in its
+formatter. The fork substitutes a single camera-time `ego2global`, which is right
+for its own radar–camera pipeline and silently wrong for LiDAR-only detection.
+**The operative part of the patch and its derivation are reproduced in Appendix A
+of the paper**, so the fix is usable without cloning anything; the complete file is
+here in `patch/`.
 
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `patch/` | `nusc_lidar_ssl_dataset.py` — the `lidar2ego` `_format_bbox` fix, as a drop-in `NuScenesDataset` subclass override |
+| `patch/` | `nusc_lidar_ssl_dataset.py` — the `lidar2ego` `_format_bbox` fix for the TEOcc/BEVDet-lineage fork (not needed on upstream mmdet3d), as a drop-in `NuScenesDataset` subclass override |
 | `configs/` | 40 mmdetection3d configs: per-seed supervised teachers and every SSL student in the filter family |
 | `tools/` | Pseudo-label dumping, the seven filter implementations, the class-aware positive-only hybrid, the gate-matched conjunctive control, the 2D-detection cache, the support-correlation and per-class kept/precision/recall audits, the scene-level block bootstrap and the pre-flight diagnostic |
 | `tools/pipelines/` | The shell drivers that sequenced the runs, kept verbatim as a record of execution order |

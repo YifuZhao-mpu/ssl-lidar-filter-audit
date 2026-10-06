@@ -3,7 +3,11 @@ All measured ΔNDS cells at {1% s0, 5% s0, 5% s1, 10% s0, 10% s1}.
 Explicitly labeled as descriptive context, not a contribution.
 """
 import sys
-sys.path.insert(0, '/root/BMVC2026/figures')
+import pathlib
+# Import paper_plot_style from this script's own directory rather than a
+# hardcoded absolute path, so the generator runs from any working copy
+# and from any cwd.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from paper_plot_style import *
 
 # Score-based perclass-only (best within-family at every cell), paired with same-seed labeled-only

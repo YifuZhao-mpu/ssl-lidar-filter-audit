@@ -3,7 +3,11 @@ Three filter variants: R4b (labeled-only), R7b (score-based SSL), R8b (camera-su
 Highlights bicycle / construction_vehicle collapse for camera-support.
 """
 import sys
-sys.path.insert(0, '/root/BMVC2026/figures')
+import pathlib
+# Import paper_plot_style from this script's own directory rather than a
+# hardcoded absolute path, so the generator runs from any working copy
+# and from any cwd.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from paper_plot_style import *
 import numpy as np
 
