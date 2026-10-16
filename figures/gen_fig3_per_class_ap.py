@@ -27,13 +27,13 @@ fig, ax = plt.subplots(1, 1, figsize=(6.5, 3.0))
 
 bars1 = ax.bar(x - w, [R4b[c] for c in CLASSES], w,
                color=COLOR_BASELINE, edgecolor='white', linewidth=0.5,
-               label='R4b labeled-only (no SSL)')
+               label='Labeled-only (no SSL)')
 bars2 = ax.bar(x,     [R7b[c] for c in CLASSES], w,
                color=COLOR_SCORE_S0, edgecolor='white', linewidth=0.5,
-               label='R7b score-based SSL (perclass-only)')
+               label='Score-based SSL (perclass-only)')
 bars3 = ax.bar(x + w, [R8b[c] for c in CLASSES], w,
                color=COLOR_CAMERA_S0, edgecolor='white', linewidth=0.5,
-               label='R8b camera-support SSL (best-view)')
+               label='Camera-support SSL (best-view)')
 
 # Highlight tail-class collapse: bicycle, construction_vehicle for R8b
 for ci in (CLASSES.index('bicycle'), CLASSES.index('construction_vehicle')):

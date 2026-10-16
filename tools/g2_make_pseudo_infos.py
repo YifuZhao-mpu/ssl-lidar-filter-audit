@@ -14,11 +14,11 @@ Per-class optimal thresholds discovered on partial-3k Phase B:
 Consensus boost: if score >= floor (0.25) AND not already-passing per-class thr,
 recover box if mean per-view support >= boost_thr (0.10).
 """
-import argparse, copy, json, pickle, sys
+import argparse, copy, json, multiprocessing as mp, pickle, sys
 from pathlib import Path
 import numpy as np
 
-sys.path.insert(0, '/root/BMVC2026')
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.g2_filter_pseudo import (
     NUSC_CLASSES, CAMERAS, NUSC_TO_COCO, box_supports, m_thresh,
 )
@@ -58,15 +58,38 @@ def parse_args():
                             'perclass_only', 'boost_only',
                             'hybrid_posonly', 'perclass_and_consensus',
                             'perclass_random_prune',
+                            'consensus_split_gate',
                             'passthrough'])
     p.add_argument('--single-thr', type=float, default=SINGLE_THR_DEFAULT)
     p.add_argument('--out-pkl', required=True)
     p.add_argument('--prune-seed', type=int, default=19,
                    help='RNG seed for perclass_random_prune; fixed so the '
                         'volume-matched control is reproducible')
+    p.add_argument('--workers', type=int, default=1,
+                   help='Processes for the per-view support computation. That '
+                        'stage is a pure per-token map with no shared state, so '
+                        'any worker count yields byte-identical supports; the '
+                        'keep-mask loop (and the perclass_random_prune RNG that '
+                        'lives in it) stays serial and in infos order regardless.')
     p.add_argument('--iou2d-thr', type=float, default=0.30)
     p.add_argument('--det-score-thr', type=float, default=0.30)
     return p.parse_args()
+
+
+_MP = {}
+
+
+def _support_worker(tok):
+    """Fork-inherited globals only; returns (token, sup, valid)."""
+    pb = _MP['pseudo'][tok]
+    info = _MP['info_by_tok'].get(tok)
+    dets = _MP['det_cache'].get(tok)
+    N = len(pb['boxes_lidar'])
+    if info is None or dets is None:
+        return tok, np.zeros((N, 6), dtype=np.float32), np.zeros((N, 6), dtype=bool)
+    sup, valid = box_supports(pb, info, dets, _MP['coco_cats'],
+                              _MP['det_score_thr'], _MP['iou2d_thr'])
+    return tok, sup, valid
 
 
 def filter_perclass_boost(pb, sup, valid, mode='all'):
@@ -178,6 +201,57 @@ def filter_perclass_and_consensus(pb, sup, valid):
     return passes_pc & camera_ok
 
 
+def filter_consensus_split_gate(pb, sup, valid):
+    """R21 -- split-gate control: the six-camera consensus rule on the eight
+    COCO-mapped classes, the per-class score gate on the two it cannot name.
+
+    R7c's keep rule is
+
+        keep = consensus | passthrough | (~has_valid)
+
+    where `passthrough` admits every barrier / traffic_cone box
+    unconditionally, inheriting only the teacher's 0.10 NMS floor. On the 5%
+    s0 dump that branch supplies 81% of R7c's kept boxes at 13-27%
+    pseudo-precision, so on 27% of the label space the score-vs-camera family
+    comparison is not score gate versus camera gate but score gate versus no
+    gate. This arm removes exactly that confound and nothing else:
+
+        COCO-mapped classes   keep = consensus | (~has_valid)   [R7c verbatim]
+        barrier, traffic_cone keep = score >= PER_CLASS_THR[cls]
+
+    The camera term -- constants, visibility-aware vote count, and the
+    no-valid-camera fallback -- is reproduced from filter_perclass_and_consensus
+    unchanged, and the score term reuses PER_CLASS_THR. Nothing is newly tuned,
+    and exactly one variable moves against R7c.
+
+    What it decides: whether the camera gate fails on the classes it can
+    actually see, or whether the family gap was mostly the passthrough flood.
+    """
+    N = len(pb['boxes_lidar'])
+    if N == 0:
+        return np.zeros((0,), dtype=bool)
+    scores = pb['scores']; labels = pb['labels']
+
+    passthrough = np.array(
+        [not NUSC_TO_COCO.get(NUSC_CLASSES[int(l)], set()) for l in labels],
+        dtype=bool)
+
+    n_valid = valid.sum(axis=1)
+    has_valid = n_valid > 0
+    sum_sup = sup.sum(axis=1)
+    mean_sup = np.where(n_valid > 0, sum_sup / np.clip(n_valid, 1, None), 0.0)
+    hits = (sup >= CONSENSUS_GAMMA).sum(axis=1)
+    m = np.array([m_thresh(int(n)) for n in n_valid])
+    consensus = (mean_sup >= CONSENSUS_TAU) & (hits >= m) & has_valid
+
+    camera_keep = consensus | (~has_valid)
+    score_keep = np.array(
+        [scores[i] >= PER_CLASS_THR[NUSC_CLASSES[int(labels[i])]]
+         for i in range(N)], dtype=bool)
+
+    return np.where(passthrough, score_keep, camera_keep)
+
+
 def filter_perclass_random_prune(pb, sup, valid, rng):
     """Volume-matched control for R19: prune the SAME number of boxes the
     conjunctive rule prunes, but choose them at random instead of by camera.
@@ -241,7 +315,8 @@ def main():
     needs_support = args.variant in ('perclass_boost', 'perclass_only',
                                      'boost_only', 'hybrid_posonly',
                                      'perclass_and_consensus',
-                                     'perclass_random_prune')
+                                     'perclass_random_prune',
+                                     'consensus_split_gate')
     if needs_support:
         if not args.det_cache:
             raise SystemExit(f'--det-cache is required for variant {args.variant}')
@@ -249,21 +324,35 @@ def main():
         cache = pickle.load(open(args.det_cache, 'rb'))
         det_cache = cache['dets']
         coco_cats = cache['meta']['coco_categories']
-        print('[+] Computing per-view support (full dump)...')
+        print(f'[+] Computing per-view support (full dump), '
+              f'workers={args.workers}...')
         supports = {}
-        proc = 0
-        for tok, pb in pseudo.items():
-            info = info_by_tok.get(tok); dets = det_cache.get(tok)
-            N = len(pb['boxes_lidar'])
-            if info is None or dets is None:
-                supports[tok] = (np.zeros((N, 6), dtype=np.float32),
-                                 np.zeros((N, 6), dtype=bool))
-                continue
-            supports[tok] = box_supports(pb, info, dets, coco_cats,
-                                          args.det_score_thr, args.iou2d_thr)
-            proc += 1
-            if proc % 2000 == 0:
-                print(f'    {proc}/{len(pseudo)}')
+        if args.workers > 1:
+            _MP.update(pseudo=pseudo, info_by_tok=info_by_tok,
+                       det_cache=det_cache, coco_cats=coco_cats,
+                       det_score_thr=args.det_score_thr,
+                       iou2d_thr=args.iou2d_thr)
+            toks = list(pseudo.keys())
+            with mp.get_context('fork').Pool(args.workers) as pool:
+                for n, (tok, sup, valid) in enumerate(
+                        pool.imap_unordered(_support_worker, toks, chunksize=32), 1):
+                    supports[tok] = (sup, valid)
+                    if n % 2000 == 0:
+                        print(f'    {n}/{len(toks)}', flush=True)
+        else:
+            proc = 0
+            for tok, pb in pseudo.items():
+                info = info_by_tok.get(tok); dets = det_cache.get(tok)
+                N = len(pb['boxes_lidar'])
+                if info is None or dets is None:
+                    supports[tok] = (np.zeros((N, 6), dtype=np.float32),
+                                     np.zeros((N, 6), dtype=bool))
+                    continue
+                supports[tok] = box_supports(pb, info, dets, coco_cats,
+                                              args.det_score_thr, args.iou2d_thr)
+                proc += 1
+                if proc % 2000 == 0:
+                    print(f'    {proc}/{len(pseudo)}', flush=True)
     else:
         supports = None
 
@@ -295,6 +384,9 @@ def main():
         elif args.variant == 'perclass_and_consensus':
             sup, valid = supports[tok]
             keep = filter_perclass_and_consensus(pb, sup, valid)
+        elif args.variant == 'consensus_split_gate':
+            sup, valid = supports[tok]
+            keep = filter_consensus_split_gate(pb, sup, valid)
         elif args.variant == 'perclass_random_prune':
             sup, valid = supports[tok]
             keep = filter_perclass_random_prune(pb, sup, valid, rng)

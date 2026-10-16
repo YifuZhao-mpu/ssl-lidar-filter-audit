@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "raw_pseudo": "cache/pseudo_5p_s0_raw_full.pkl",
+    "max_samples": 5000,
+    "gamma": 0.2,
+    "match": "greedy same-class BEV centre <= 2.0 m, score-desc",
+    "n_boxes_total": 146698
+  },
+  "all_classes": {
+    "all": {
+      "n_boxes": 146698,
+      "mean_offdiag_r": 0.4176274294901008,
+      "n_pairs_r": 7,
+      "vote_lift_at_gamma": 8.324900084852755,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.05876186197225285
+    },
+    "TP": {
+      "n_boxes": 27393,
+      "mean_offdiag_r": 0.4340523855795433,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 2.8695831087602603,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.18148625819694464
+    },
+    "FP": {
+      "n_boxes": 119305,
+      "mean_offdiag_r": 0.4820986452213741,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 14.733630640640051,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.030463465203459758
+    }
+  },
+  "coco_mapped": {
+    "all": {
+      "n_boxes": 127798,
+      "mean_offdiag_r": 0.41368175956281494,
+      "n_pairs_r": 7,
+      "vote_lift_at_gamma": 7.260643106121315,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.06743855372740198
+    },
+    "TP": {
+      "n_boxes": 22924,
+      "mean_offdiag_r": 0.40973311128937623,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 2.4095190521471586,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.21666341378786894
+    },
+    "FP": {
+      "n_boxes": 104874,
+      "mean_offdiag_r": 0.4798739580865899,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 12.968034678029843,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.03465263980408132
+    }
+  },
+  "per_class": {
+    "car": {
+      "all": {
+        "n_boxes": 57538,
+        "mean_offdiag_r": 0.4884847457108949,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 4.5199325898613525,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.11575939692906274
+      },
+      "TP": {
+        "n_boxes": 14717,
+        "mean_offdiag_r": 0.3999531818756709,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 2.0363053152908948,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.2710984424310292
+      },
+      "FP": {
+        "n_boxes": 42821,
+        "mean_offdiag_r": 0.49393880195231893,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 7.773679997290401,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.062328567259994166
+      }
+    },
+    "pedestrian": {
+      "all": {
+        "n_boxes": 44255,
+        "mean_offdiag_r": 0.3541230809848476,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 34.61712700462164,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.009953677550559259
+      },
+      "TP": {
+        "n_boxes": 3967,
+        "mean_offdiag_r": 0.39430132209603524,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 10.380113270028986,
+        "n_pairs_lift": 9,
+        "vote_rate_at_gamma": 0.040962944290395764
+      },
+      "FP": {
+        "n_boxes": 40288,
+        "mean_offdiag_r": 0.31890294921188705,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 48.467580460647795,
+        "n_pairs_lift": 10,
+        "vote_rate_at_gamma": 0.006900317712470214
+      }
+    },
+    "truck": {
+      "all": {
+        "n_boxes": 15796,
+        "mean_offdiag_r": 0.35041737768571907,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 6.904519489287867,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.055789937661356336
+      },
+      "TP": {
+        "n_boxes": 2480,
+        "mean_offdiag_r": 0.24362956881346923,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 1.9506637590537954,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.2095855431153015
+      },
+      "FP": {
+        "n_boxes": 13316,
+        "mean_offdiag_r": 0.3566662981383019,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 13.314465294352457,
+        "n_pairs_lift": 11,
+        "vote_rate_at_gamma": 0.02643320460425181
+      }
+    }
+  }
+}

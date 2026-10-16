@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "raw_pseudo": "cache/pseudo_t5_5p_s1_raw_full.pkl",
+    "max_samples": 5000,
+    "gamma": 0.2,
+    "match": "greedy same-class BEV centre <= 2.0 m, score-desc",
+    "n_boxes_total": 139051
+  },
+  "all_classes": {
+    "all": {
+      "n_boxes": 139051,
+      "mean_offdiag_r": 0.4483743262616549,
+      "n_pairs_r": 8,
+      "vote_lift_at_gamma": 5.5013055347807205,
+      "n_pairs_lift": 13,
+      "vote_rate_at_gamma": 0.08948424593359491
+    },
+    "TP": {
+      "n_boxes": 25907,
+      "mean_offdiag_r": 0.40787336886636,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 2.1185846014202805,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.251133394805594
+    },
+    "FP": {
+      "n_boxes": 113144,
+      "mean_offdiag_r": 0.5284288265495634,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 9.498265326242153,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.052333923454904265
+    }
+  },
+  "coco_mapped": {
+    "all": {
+      "n_boxes": 112290,
+      "mean_offdiag_r": 0.43979063247425804,
+      "n_pairs_r": 8,
+      "vote_lift_at_gamma": 4.485337710217109,
+      "n_pairs_lift": 13,
+      "vote_rate_at_gamma": 0.1107664825520683
+    },
+    "TP": {
+      "n_boxes": 21560,
+      "mean_offdiag_r": 0.3679348388888681,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 1.768979065991134,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.30148517134818503
+    },
+    "FP": {
+      "n_boxes": 90730,
+      "mean_offdiag_r": 0.5219529572788723,
+      "n_pairs_r": 6,
+      "vote_lift_at_gamma": 7.621683246019377,
+      "n_pairs_lift": 12,
+      "vote_rate_at_gamma": 0.06524694653757451
+    }
+  },
+  "per_class": {
+    "car": {
+      "all": {
+        "n_boxes": 64250,
+        "mean_offdiag_r": 0.4984840904047641,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 3.5651203905898736,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.14992457114418575
+      },
+      "TP": {
+        "n_boxes": 14311,
+        "mean_offdiag_r": 0.3389301234323124,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 1.5443715864196488,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.3564000558347292
+      },
+      "FP": {
+        "n_boxes": 49939,
+        "mean_offdiag_r": 0.5350504413909396,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 5.75253305467711,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.09072261911908908
+      }
+    },
+    "pedestrian": {
+      "all": {
+        "n_boxes": 30797,
+        "mean_offdiag_r": 0.44389146044033323,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 16.424098082109726,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.027697503003539306
+      },
+      "TP": {
+        "n_boxes": 3732,
+        "mean_offdiag_r": 0.4273608683954772,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 4.098645377690644,
+        "n_pairs_lift": 11,
+        "vote_rate_at_gamma": 0.1152197213290461
+      },
+      "FP": {
+        "n_boxes": 27065,
+        "mean_offdiag_r": 0.4217948019251727,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 26.746835862390334,
+        "n_pairs_lift": 11,
+        "vote_rate_at_gamma": 0.01562904119711805
+      }
+    },
+    "truck": {
+      "all": {
+        "n_boxes": 11086,
+        "mean_offdiag_r": 0.3947547411394258,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 4.441110850993344,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.09553855103593323
+      },
+      "TP": {
+        "n_boxes": 2135,
+        "mean_offdiag_r": 0.28782635642248594,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 1.6399586198284146,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.283363802559415
+      },
+      "FP": {
+        "n_boxes": 8951,
+        "mean_offdiag_r": 0.3638072591413602,
+        "n_pairs_r": 6,
+        "vote_lift_at_gamma": 7.428906673398065,
+        "n_pairs_lift": 12,
+        "vote_rate_at_gamma": 0.04980245951811251
+      }
+    }
+  }
+}

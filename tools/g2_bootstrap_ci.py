@@ -117,7 +117,11 @@ import numpy as np
 # Paths / constants
 # --------------------------------------------------------------------------------------
 
-REPO = '/workspace/BMVC2026'
+# Project root: derived from this file's location (tools/..), so the script runs
+# from any working copy; ARIS_PROJECT_ROOT overrides. The original runs used
+# /workspace/BMVC2026.
+REPO = os.environ.get('ARIS_PROJECT_ROOT',
+                      os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORK_DIRS = os.path.join(REPO, 'work_dirs')
 DEFAULT_DATAROOT = '/datasets/data/nuscenes'
 DEFAULT_VERSION = 'v1.0-trainval'
@@ -200,6 +204,23 @@ for _r in [
 ]:
     RUN_REGISTRY[_r['key']] = _r
 
+# ---- T5: true-5% initialization replication (review-stage/PREREG_2026-10-06_TRUE5P.md) --
+# expected_nds=None: there is no paper value yet; it is filled from the run's own
+# cached metrics_summary.json (the official devkit number) before the cross-check,
+# so the no-resampling recomputation must still reproduce the devkit exactly.
+_T5 = [('T5L', 'labeled_only_t5', 'labeled-only (T5 teacher)', 'T5_sup_5p_s{s}_external_eval', (0, 1, 2)),
+       ('T5LC', 'labeled_cont_t5', 'labeled-only +10 ep (T5)', 'T5_supcont_5p_s{s}_external_eval', (0, 1)),
+       ('T5single', 'score_t5', 'single-thr (T5)', 'T5_ssl_5p_s{s}_single_thr_external_eval', (0, 1)),
+       ('T5perclass', 'score_t5', 'perclass-only (T5)', 'T5_ssl_5p_s{s}_perclass_only_external_eval', (0, 1, 2)),
+       ('T5best', 'camera_t5', 'best-view (T5)', 'T5_ssl_5p_s{s}_best_view_external_eval', (0, 1, 2)),
+       ('T5cons', 'camera_t5', '6-cam consensus (T5)', 'T5_ssl_5p_s{s}_consensus_external_eval', (0, 1)),
+       ('T5conj', 'conjunctive_t5', 'perclass AND consensus (T5)',
+        'T5_ssl_5p_s{s}_perclass_and_consensus_external_eval', (0, 1))]
+for _tag, _fam, _lab, _dir, _seeds in _T5:
+    for _s in _seeds:
+        _r = _R('%s_s%d' % (_tag, _s), _tag, _s, _fam, _lab, _dir.format(s=_s), None)
+        RUN_REGISTRY[_r['key']] = _r
+
 SCORE_TAGS = ['R6', 'R7', 'R7b']
 CAMERA_TAGS = ['R8b', 'R8c', 'R8d', 'R7c']
 
@@ -213,6 +234,7 @@ GROUPS = {
     'hybrid': [k for k, v in RUN_REGISTRY.items() if v['family'] == 'hybrid'],
     'families': [k for k, v in RUN_REGISTRY.items() if v['family'] in ('score', 'camera')],
     'smoke': ['R6_s0', 'R8b_s0', 'R4b_s0'],
+    't5': [k for k, v in RUN_REGISTRY.items() if v['family'].endswith('_t5')],
 }
 
 
@@ -668,6 +690,14 @@ def main(argv=None):
 
     args.workers = max(1, min(96, args.workers))
     keys = resolve_runs(args.runs)
+    for k in keys:  # T5 entries: take the official devkit NDS as the reference value
+        v = RUN_REGISTRY[k]
+        if v['expected_nds'] is None:
+            mp_ = os.path.join(WORK_DIRS, v['dir'], METRICS_REL)
+            if not os.path.exists(mp_):
+                raise SystemExit('No metrics_summary.json for %s (%s)' % (k, mp_))
+            with open(mp_) as f:
+                v['expected_nds'] = round(json.load(f)['nd_score'], 4)
     print('=' * 88)
     print('RUN MAPPING (%d runs)' % len(keys))
     print('%-10s %-6s %-5s %-18s %-45s %s' % ('key', 'tag', 'seed', 'family', 'dir', 'paper NDS'))

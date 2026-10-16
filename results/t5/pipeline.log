@@ -1,0 +1,136 @@
+[2026-10-06 10:42:00] === T5 pipeline start (pid 140011) ===
+[2026-10-06 10:42:00] queued: TEACHER|0
+[2026-10-06 10:42:00] queued: TEACHER|1
+[2026-10-06 10:42:00] queued: TEACHER|2
+[2026-10-06 10:42:00] worker gpu0 up
+[2026-10-06 10:42:00] worker gpu2 up
+[2026-10-06 10:42:00] worker gpu3 up
+[2026-10-06 10:42:00] worker gpu1 up
+[2026-10-06 10:42:00] worker gpu1: GPU has a foreign process, waiting
+[2026-10-06 10:42:00] worker gpu2: GPU has a foreign process, waiting
+[2026-10-06 10:42:00] worker gpu0: GPU has a foreign process, waiting
+[2026-10-06 10:42:00] worker gpu3: GPU has a foreign process, waiting
+[2026-10-06 11:16:59] === T5 pipeline start (pid 152080) ===
+[2026-10-06 11:16:59] worker gpu1 up
+[2026-10-06 11:16:59] worker gpu2 up
+[2026-10-06 11:16:59] worker gpu0 up
+[2026-10-06 11:16:59] worker gpu3 up
+[2026-10-06 11:16:59] worker gpu1: GPU has a foreign process, waiting
+[2026-10-06 11:16:59] worker gpu0: GPU has a foreign process, waiting
+[2026-10-06 11:16:59] worker gpu2: GPU has a foreign process, waiting
+[2026-10-06 11:16:59] worker gpu3: GPU has a foreign process, waiting
+[2026-10-06 11:31:59] worker gpu1: GPU free, joining
+[2026-10-06 11:31:59] worker gpu2: GPU free, joining
+[2026-10-06 11:31:59] TRAIN start T5_sup_5p_s0 gpu1 
+[2026-10-06 11:31:59] TRAIN start T5_sup_5p_s1 gpu2 
+[2026-10-06 13:02:01] worker gpu0: GPU free, joining
+[2026-10-06 13:02:01] TRAIN start T5_sup_5p_s2 gpu0 
+[2026-10-06 13:02:01] worker gpu3: GPU free, joining
+[2026-10-06 16:24:26] TRAIN done T5_sup_5p_s1 rc=0
+[2026-10-06 16:24:26] EVAL start T5_sup_5p_s1 (epoch_20.pth, val_full)
+[2026-10-06 16:27:23] TRAIN done T5_sup_5p_s0 rc=0
+[2026-10-06 16:27:23] EVAL start T5_sup_5p_s0 (epoch_20.pth, val_full)
+[2026-10-06 16:39:34] EVAL done T5_sup_5p_s1 rc=0 NDS=0.29874570486765695
+[2026-10-06 16:39:34] DUMP start s1 gpu2
+[2026-10-06 16:43:04] EVAL done T5_sup_5p_s0 rc=0 NDS=0.31849928194830956
+[2026-10-06 16:43:04] DUMP start s0 gpu1
+[2026-10-06 17:14:15] DUMP done s1 rc=0
+[2026-10-06 17:14:15] BUILD start s1
+[2026-10-06 17:15:22] BUILD s1 single_thr rc=0
+[2026-10-06 17:17:38] DUMP done s0 rc=0
+[2026-10-06 17:17:38] BUILD start s0
+[2026-10-06 17:19:08] BUILD s0 single_thr rc=0
+[2026-10-06 17:37:33] BUILD s1 perclass_only rc=0
+[2026-10-06 17:37:37] BUILD s1 perclass_and_consensus rc=0
+[2026-10-06 17:39:50] BUILD s0 perclass_and_consensus rc=0
+[2026-10-06 17:41:01] BUILD s0 perclass_only rc=0
+[2026-10-06 18:08:26] TRAIN done T5_sup_5p_s2 rc=0
+[2026-10-06 18:08:26] EVAL start T5_sup_5p_s2 (epoch_20.pth, val_full)
+[2026-10-06 18:23:46] EVAL done T5_sup_5p_s2 rc=0 NDS=0.3173519839657265
+[2026-10-06 18:23:46] DUMP start s2 gpu0
+[2026-10-06 18:57:04] DUMP done s2 rc=0
+[2026-10-06 18:57:04] BUILD start s2
+[2026-10-06 18:58:07] BUILD s2 single_thr rc=0
+[2026-10-06 19:11:27] BUILD s0 camera filters rc=0
+[2026-10-06 19:12:13] BUILD s2 perclass_only rc=0
+[2026-10-06 19:12:32] BUILD s2 perclass_and_consensus rc=0
+[2026-10-06 19:13:35] BUILD done s0: 5 infos
+[2026-10-06 19:13:35] queued: STUDENT|T5_ssl_5p_s0_perclass_only|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s0_perclass_only.py
+[2026-10-06 19:13:35] queued: STUDENT|T5_ssl_5p_s0_best_view|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s0_best_view.py
+[2026-10-06 19:13:35] queued: STUDENT|T5_ssl_5p_s0_single_thr|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s0_single_thr.py
+[2026-10-06 19:13:35] queued: STUDENT|T5_ssl_5p_s0_consensus|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s0_consensus.py
+[2026-10-06 19:13:35] queued: STUDENT|T5_ssl_5p_s0_perclass_and_consensus|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s0_perclass_and_consensus.py
+[2026-10-06 19:13:35] queued: STUDENT|T5_supcont_5p_s0|/home/zyf/paper/BMVC2026/configs/true5p/t5_supcont_5p_s0.py
+[2026-10-06 19:13:44] TRAIN start T5_ssl_5p_s0_perclass_only gpu1 
+[2026-10-06 19:14:19] TRAIN start T5_ssl_5p_s0_best_view gpu3 
+[2026-10-06 19:14:22] TRAIN start T5_ssl_5p_s0_single_thr gpu2 
+[2026-10-06 19:15:05] TRAIN start T5_ssl_5p_s0_consensus gpu0 
+[2026-10-06 19:27:07] BUILD s1 camera filters rc=0
+[2026-10-06 19:29:15] BUILD done s1: 5 infos
+[2026-10-06 19:29:15] queued: STUDENT|T5_ssl_5p_s1_perclass_only|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s1_perclass_only.py
+[2026-10-06 19:29:15] queued: STUDENT|T5_ssl_5p_s1_best_view|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s1_best_view.py
+[2026-10-06 19:29:15] queued: STUDENT|T5_ssl_5p_s1_single_thr|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s1_single_thr.py
+[2026-10-06 19:29:15] queued: STUDENT|T5_ssl_5p_s1_consensus|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s1_consensus.py
+[2026-10-06 19:29:15] queued: STUDENT|T5_ssl_5p_s1_perclass_and_consensus|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s1_perclass_and_consensus.py
+[2026-10-06 19:29:15] queued: STUDENT|T5_supcont_5p_s1|/home/zyf/paper/BMVC2026/configs/true5p/t5_supcont_5p_s1.py
+[2026-10-06 20:47:41] BUILD s2 camera filters rc=0
+[2026-10-06 20:49:50] BUILD done s2: 5 infos
+[2026-10-06 20:49:50] queued: STUDENT|T5_ssl_5p_s2_perclass_only|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s2_perclass_only.py
+[2026-10-06 20:49:50] queued: STUDENT|T5_ssl_5p_s2_best_view|/home/zyf/paper/BMVC2026/configs/true5p/t5_ssl_5p_s2_best_view.py
+[2026-10-08 08:03:26] TRAIN done T5_ssl_5p_s0_single_thr rc=0
+[2026-10-08 08:03:26] EVAL start T5_ssl_5p_s0_single_thr (epoch_10.pth, val_full)
+[2026-10-08 08:16:02] EVAL done T5_ssl_5p_s0_single_thr rc=0 NDS=0.3450531760907939
+[2026-10-08 08:16:02] TRAIN start T5_ssl_5p_s0_perclass_and_consensus gpu2 
+[2026-10-08 09:53:20] TRAIN done T5_ssl_5p_s0_perclass_only rc=0
+[2026-10-08 09:53:20] EVAL start T5_ssl_5p_s0_perclass_only (epoch_10.pth, val_full)
+[2026-10-08 10:06:06] EVAL done T5_ssl_5p_s0_perclass_only rc=0 NDS=0.34385686833632045
+[2026-10-08 10:06:06] TRAIN start T5_supcont_5p_s0 gpu1 
+[2026-10-08 13:06:22] TRAIN done T5_supcont_5p_s0 rc=0
+[2026-10-08 13:06:22] EVAL start T5_supcont_5p_s0 (epoch_10.pth, val_full)
+[2026-10-08 13:20:37] EVAL done T5_supcont_5p_s0 rc=0 NDS=0.3319631276500391
+[2026-10-08 13:20:37] TRAIN start T5_ssl_5p_s1_perclass_only gpu1 
+[2026-10-08 21:44:42] TRAIN done T5_ssl_5p_s0_consensus rc=0
+[2026-10-08 21:44:42] EVAL start T5_ssl_5p_s0_consensus (epoch_10.pth, val_full)
+[2026-10-08 22:01:57] EVAL done T5_ssl_5p_s0_consensus rc=0 NDS=0.26995031787017787
+[2026-10-08 22:01:58] TRAIN start T5_ssl_5p_s1_best_view gpu0 
+[2026-10-09 01:22:21] TRAIN done T5_ssl_5p_s0_best_view rc=0
+[2026-10-09 01:22:21] EVAL start T5_ssl_5p_s0_best_view (epoch_10.pth, val_full)
+[2026-10-09 01:39:08] EVAL done T5_ssl_5p_s0_best_view rc=0 NDS=0.2711996447920575
+[2026-10-09 01:39:08] TRAIN start T5_ssl_5p_s1_single_thr gpu3 
+[2026-10-09 04:53:14] TRAIN done T5_ssl_5p_s0_perclass_and_consensus rc=0
+[2026-10-09 04:53:14] EVAL start T5_ssl_5p_s0_perclass_and_consensus (epoch_10.pth, val_full)
+[2026-10-09 05:05:25] EVAL done T5_ssl_5p_s0_perclass_and_consensus rc=0 NDS=0.2857125415711235
+[2026-10-09 05:05:25] TRAIN start T5_ssl_5p_s1_consensus gpu2 
+[2026-10-10 04:35:11] TRAIN done T5_ssl_5p_s1_perclass_only rc=0
+[2026-10-10 04:35:11] EVAL start T5_ssl_5p_s1_perclass_only (epoch_10.pth, val_full)
+[2026-10-10 04:48:08] EVAL done T5_ssl_5p_s1_perclass_only rc=0 NDS=0.3139280226808935
+[2026-10-10 04:48:08] TRAIN start T5_ssl_5p_s1_perclass_and_consensus gpu1 
+[2026-10-10 14:56:28] TRAIN done T5_ssl_5p_s1_single_thr rc=0
+[2026-10-10 14:56:28] EVAL start T5_ssl_5p_s1_single_thr (epoch_10.pth, val_full)
+[2026-10-10 15:09:08] EVAL done T5_ssl_5p_s1_single_thr rc=0 NDS=0.31821056499070577
+[2026-10-10 15:09:08] TRAIN start T5_supcont_5p_s1 gpu3 
+[2026-10-10 18:06:20] TRAIN done T5_supcont_5p_s1 rc=0
+[2026-10-10 18:06:20] EVAL start T5_supcont_5p_s1 (epoch_10.pth, val_full)
+[2026-10-10 18:21:29] EVAL done T5_supcont_5p_s1 rc=0 NDS=0.31390841739379877
+[2026-10-10 18:21:29] TRAIN start T5_ssl_5p_s2_perclass_only gpu3 
+[2026-10-11 02:16:26] TRAIN done T5_ssl_5p_s1_perclass_and_consensus rc=0
+[2026-10-11 02:16:26] EVAL start T5_ssl_5p_s1_perclass_and_consensus (epoch_10.pth, val_full)
+[2026-10-11 02:29:01] EVAL done T5_ssl_5p_s1_perclass_and_consensus rc=0 NDS=0.26265420431893854
+[2026-10-11 02:29:01] TRAIN start T5_ssl_5p_s2_best_view gpu1 
+[2026-10-11 04:43:42] TRAIN done T5_ssl_5p_s1_best_view rc=0
+[2026-10-11 04:43:42] EVAL start T5_ssl_5p_s1_best_view (epoch_10.pth, val_full)
+[2026-10-11 05:01:29] EVAL done T5_ssl_5p_s1_best_view rc=0 NDS=0.25288286749339617
+[2026-10-11 05:01:29] worker gpu0 exit
+[2026-10-11 07:38:43] TRAIN done T5_ssl_5p_s1_consensus rc=0
+[2026-10-11 07:38:43] EVAL start T5_ssl_5p_s1_consensus (epoch_10.pth, val_full)
+[2026-10-11 07:56:17] EVAL done T5_ssl_5p_s1_consensus rc=0 NDS=0.25248614399240676
+[2026-10-11 07:56:17] worker gpu2 exit
+[2026-10-12 11:12:57] TRAIN done T5_ssl_5p_s2_perclass_only rc=0
+[2026-10-12 11:12:57] EVAL start T5_ssl_5p_s2_perclass_only (epoch_10.pth, val_full)
+[2026-10-12 11:26:01] EVAL done T5_ssl_5p_s2_perclass_only rc=0 NDS=0.3428936614231376
+[2026-10-12 11:26:01] worker gpu3 exit
+[2026-10-13 09:05:45] TRAIN done T5_ssl_5p_s2_best_view rc=0
+[2026-10-13 09:05:45] EVAL start T5_ssl_5p_s2_best_view (epoch_10.pth, val_full)
+[2026-10-13 09:23:31] EVAL done T5_ssl_5p_s2_best_view rc=0 NDS=0.2683543216221291
+[2026-10-13 09:23:31] worker gpu1 exit
+[2026-10-13 09:23:31] === T5 pipeline complete ===
